@@ -1,9 +1,14 @@
-from flask import Flask, render_template, request, jsonify
+from flask import Flask, render_template, request, jsonify,redirect, url_for
 import openai
 import os
 import re
+from flask_sqlalchemy import SQLAlchemy
+
+
+
 
 app = Flask(__name__)
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///bookimages.db'
 
 # Set your OpenAI API key
 openai.api_key = ''
@@ -17,14 +22,19 @@ messages = [
 }
     ]
 
+db = SQLAlchemy(app)
+
+class Image(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(50))
+    data = db.Column(db.LargeBinary)
+# push context manually to app
+with app.app_context():
+    db.create_all()
+
 @app.route('/')
 def index():
     return render_template('index.html')
-
-@app.route('/books',methods=['GET'])
-def books():
-    return render_template("books.html")
-
 
 @app.route('/message', methods=['POST'])
 def message():
@@ -55,5 +65,23 @@ def message():
 
     return jsonify({'message': ai_message})
 
+@app.route('/books',methods=['GET'])
+def books():
+    return render_template("books.html")
+
+@app.route('/testupload',methods=['GET'])
+def testupload():
+    return render_template("testupload.html")
+
+@app.route('/upload', methods=['POST'])
+def upload_image():
+    file = request.files['image']
+    if file:
+        image = Image(name=file.filename, data=file.read())
+        db.session.add(image)
+        db.session.commit()
+        return 'Image has been uploaded'
+
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=True)
+
