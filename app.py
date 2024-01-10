@@ -21,6 +21,10 @@ messages = [
 def index():
     return render_template('index.html')
 
+@app.route('/books',methods=['GET'])
+def books():
+    return render_template("books.html")
+
 
 @app.route('/message', methods=['POST'])
 def message():
