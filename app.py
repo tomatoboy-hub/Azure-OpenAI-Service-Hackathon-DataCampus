@@ -1,26 +1,26 @@
-from flask import Flask, render_template, request, jsonify,redirect, url_for
-import openai
+from flask import Flask, render_template, request, jsonify
+import requests
 import os
 import re
 from flask_sqlalchemy import SQLAlchemy
 
-
-
-
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///bookimages.db'
 
-# Set your OpenAI API key
-openai.api_key = ''
+azure_endpoint = "https://sunhackathon51.openai.azure.com/"
+api_key = "e6b46d28ad9445ebaa1a9e6a80fa7d76"
+headers = {
+    "Authorization": f"Bearer {api_key}",
+    "Content-Type": "application/json"
+}
 
 # Initialize the conversation with the system role
 messages = [
     {
-    "role": "system",
-    "content": '''You are a counselor(EmoEcho), a virtual listener who empathizes with emotions and aims to provide a safe space for users to express their feelings and concerns. Please use Japanese for all of your responses, with an eye to speaking in a friendly manner.
-'''
-}
-    ]
+        "role": "system",
+        "content": '''You are a counselor(EmoEcho), a virtual listener who empathizes with emotions and aims to provide a safe space for users to express their feelings and concerns. Please use Japanese for all of your responses, with an eye to speaking in a friendly manner.'''
+    }
+]
 
 db = SQLAlchemy(app)
 
@@ -28,6 +28,7 @@ class Image(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(50))
     data = db.Column(db.LargeBinary)
+
 # push context manually to app
 with app.app_context():
     db.create_all()
@@ -45,19 +46,20 @@ def message():
 
     ai_message = ""
     try:
-        completions_generator = openai.ChatCompletion.create(
-            model="gpt-3.5-turbo",
-            messages=messages,
-            stream=True
+        response = requests.post(
+            f"{azure_endpoint}gpt3.5-turbo/completions",
+            headers=headers,
+            json={
+                "model": "GPT35TURBO",  # モデルを選択（GPT35TURBO, GPT35TURBO16K, ADA）
+                "messages": messages
+            }
         )
-        # Handle streamed responses; combine content chunks
-        for chunk in completions_generator:
-            content_chunk = chunk.get('choices', [{}])[0].get('delta', {}).get('content', "")
-            ai_message += content_chunk
+        response_json = response.json()
+        ai_message = response_json.get('choices', [{}])[0].get('message', '')
 
         # Formatting the response
-        ai_message = re.sub(r'([a-z]\))', r'<h3>\1</h3>', ai_message)  # Subheading formatting
-        ai_message = ai_message.replace('\n', '<br/>')  # New line formatting
+        ai_message = re.sub(r'([a-z]\))', r'<h3>\1</h3>', ai_message)
+        ai_message = ai_message.replace('\n', '<br/>')
 
         messages.append({"role": "assistant", "content": ai_message})
     except Exception as e:
@@ -65,11 +67,11 @@ def message():
 
     return jsonify({'message': ai_message})
 
-@app.route('/books',methods=['GET'])
+@app.route('/books', methods=['GET'])
 def books():
     return render_template("books.html")
 
-@app.route('/testupload',methods=['GET'])
+@app.route('/testupload', methods=['GET'])
 def testupload():
     return render_template("testupload.html")
 
@@ -84,4 +86,3 @@ def upload_image():
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=True)
-
