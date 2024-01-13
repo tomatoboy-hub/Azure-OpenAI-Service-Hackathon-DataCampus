@@ -1,11 +1,11 @@
-from flask import Flask, render_template, request, jsonify
+from flask import Flask, render_template, request, jsonify,send_file
+import io
 import requests
 import os
 import re
 from flask_sqlalchemy import SQLAlchemy
 import base64
 import requests
-import os
 import logging
 import openai
 
@@ -141,8 +141,18 @@ def create_image():
             os.makedirs("./out")
 
         for i, image in enumerate(data["artifacts"]):
-            with open(f'./out/txt2img_{image["seed"]}.png', "wb") as f:
-                f.write(base64.b64decode(image["base64"]))
+            image_data = base64.b64decode(image["base64"])
+            file_name = f'txt2img_{image["seed"]}.png'
+            # ファイルをサーバーに一時的に保存
+            with open(f'./out/{file_name}', "wb") as f:
+                f.write(image_data)
+
+            # 画像データをデータベースに保存
+            new_image = Image(name=file_name, data=image_data)
+            db.session.add(new_image)
+            db.session.commit()
+
+            
 
         return jsonify({'message': 'Image created successfully'})
     except Exception as e:
@@ -157,6 +167,18 @@ def upload_image():
         db.session.add(image)
         db.session.commit()
         return 'Image has been uploaded'
+
+@app.route('/images')
+def images():
+    images = Image.query.all()
+    return render_template('images.html', images=images)
+
+@app.route('/show_image/<int:image_id>')
+def show_image(image_id):
+    image = Image.query.get(image_id)
+    if image:
+        return send_file(io.BytesIO(image.data), mimetype='image/png')
+    return 'Image not found', 404
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=True)
