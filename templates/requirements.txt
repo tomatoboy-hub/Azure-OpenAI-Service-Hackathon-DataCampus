@@ -4,3 +4,4 @@ openai==0.28
 SQLAlchemy 
 flask-sqlalchemy 
 PyMySQL
+requests 
