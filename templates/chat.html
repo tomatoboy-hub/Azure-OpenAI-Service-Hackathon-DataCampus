@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Image Creator</title>
+    <script>
+        function createImage() {
+            const userMessage = document.getElementById('message').value;
+
+            // POST to /message
+            fetch('/message', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ message: userMessage }),
+            })
+            .then(response => response.json())
+            .then(data => {
+                // POST to /create_image with the AI's response
+                fetch('/create_image', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ text: data.message }),
+                });
+            })
+            .catch((error) => {
+                console.error('Error:', error);
+            });
+        }
+    </script>
+</head>
+<body>
+    <textarea id="message" placeholder="Enter your message"></textarea>
+    <button onclick="createImage()">Create Image</button>
+</body>
+</html>
