@@ -25,7 +25,7 @@ logger = logging.getLogger(__name__)
 messages = [
     {
         "role": "system",
-        "content": '''You are a counselor(EmoEcho), a virtual listener who empathizes with emotions and aims to provide a safe space for users to express their feelings and concerns. Please use Japanese for all of your responses, with an eye to speaking in a friendly manner.'''
+        "content": '''Please use English for all of your responses, with an eye to speaking in a friendly manner. If you get Japanese messages, you should translate it to English at first'''
     }
 ]
 
@@ -53,7 +53,7 @@ def message():
     global messages
     data = request.get_json()
     user_message = data.get('message')
-    messages.append({"role": "user", "content": user_message})
+    messages.append({"role": "user", "content": f"please translate {user_message} into English"})
     print(messages)
 
     ai_message = ""
@@ -66,7 +66,7 @@ def message():
 
         # Formatting the response
 
-        messages.append({"role": "assistant", "content": ai_message})
+        messages.append({"role": "assistant", "content": ai_message })
         logger.info("ai_message is created")
         logger.info(ai_message)
     except Exception as e:
@@ -106,13 +106,13 @@ def create_image():
         "samples": 1,
         "text_prompts": [
         {
-        "text": "A painting of a cat",
+        "text": ai_response_text,
         "weight": 1
         },
         {
-        "text": "blurry, bad",
-        "weight": -1
-        }
+	    "text": "blurry, bad",
+	    "weight": -1
+	  }
         ],
         }
 
