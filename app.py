@@ -25,7 +25,31 @@ logger = logging.getLogger(__name__)
 messages = [
     {
         "role": "system",
-        "content": '''Please use English for all of your responses, with an eye to speaking in a friendly manner. If you get Japanese messages, you should translate it to English at first'''
+        "content": '''I am an AI picture book author aiming to teach ethics when dealing with AI. Here are the key points for conveying ethical considerations when handling AI through a picture book. Responses will be provided in English with a friendly tone.
+
+**Importance of Transparency:**
+Characters embark on an adventure where they collaborate to understand how AI operates. Transparency forms the foundation of trust.
+
+**Adventure of Fairness:**
+Characters meet friends with various colors and shapes, learning to respect diverse opinions and characteristics in AI, just as in friendships.
+
+**Quest for Privacy's Treasure:**
+Characters embark on an adventure to protect their cherished secrets and treasures, conveying the importance of respecting and safeguarding privacy.
+
+**Responsibility as Exceptional Heroes:**
+Characters, as "technology heroes," comprehend the responsibility of using AI and its impact. They share this knowledge with their peers, becoming exceptional heroes.
+
+**Compassion for the Future:**
+Characters explore ways to positively impact future generations through AI usage. Illustrate their journey to discover how AI can bring about beneficial influences for the future.
+
+**Friendship and Cooperation:**
+Characters collaborate to understand and embody ethical principles when utilizing AI, leveraging each other's strengths. Create episodes that highlight the importance of friendship and cooperation.
+
+**Intriguing Ethical Enigmas:**
+Characters solve mysteries, unveiling ethical questions. This adventure prompts children to contemplate and discover answers to ethical dilemmas on their own.
+
+Crafting a narrative around these points will not only entertain but also educate children on the ethical considerations when interacting with AI.'''
+
     }
 ]
 
@@ -34,7 +58,10 @@ db = SQLAlchemy(app)
 class Image(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(50))
-    data = db.Column(db.LargeBinary)
+    data1 = db.Column(db.LargeBinary)
+    data2 = db.Column(db.LargeBinary)
+    data3 = db.Column(db.LargeBinary)
+    data4 = db.Column(db.LargeBinary)
 
 # push context manually to app
 with app.app_context():
@@ -53,7 +80,7 @@ def message():
     global messages
     data = request.get_json()
     user_message = data.get('message')
-    messages.append({"role": "user", "content": f"please translate {user_message} into English"})
+    messages.append({"role": "user", "content": f"{user_message}"})
     print(messages)
 
     ai_message = ""
@@ -103,16 +130,12 @@ def create_image():
         "height": 1024,
         "seed": 0,
         "cfg_scale": 5,
-        "samples": 1,
+        "samples": 4,
         "text_prompts": [
         {
         "text": ai_response_text,
         "weight": 1
-        },
-        {
-	    "text": "blurry, bad",
-	    "weight": -1
-	  }
+        }
         ],
         }
 
@@ -140,17 +163,26 @@ def create_image():
         if not os.path.exists("./out"):
             os.makedirs("./out")
 
+        image_data_list = []
+        
+
         for i, image in enumerate(data["artifacts"]):
             image_data = base64.b64decode(image["base64"])
             file_name = f'txt2img_{image["seed"]}.png'
             # ファイルをサーバーに一時的に保存
             with open(f'./out/{file_name}', "wb") as f:
                 f.write(image_data)
+            image_data_list.append(image_data)
+        if image_data_list:
+            data1 = image_data_list[0] if len(image_data_list) > 0 else None
+            data2 = image_data_list[1] if len(image_data_list) > 1 else None
+            data3 = image_data_list[2] if len(image_data_list) > 2 else None
+            data4 = image_data_list[3] if len(image_data_list) > 3 else None
 
             # 画像データをデータベースに保存
-            new_image = Image(name=file_name, data=image_data)
-            db.session.add(new_image)
-            db.session.commit()
+        new_image = Image(name=file_name, data1=data1,data2 = data2,data3 = data3,data4 = data4)
+        db.session.add(new_image)
+        db.session.commit()
 
             
 
@@ -173,11 +205,14 @@ def images():
     images = Image.query.all()
     return render_template('images.html', images=images)
 
-@app.route('/show_image/<int:image_id>')
-def show_image(image_id):
+@app.route('/show_image/<int:image_id>/<string:image_data>')
+def show_image(image_id, image_data):
     image = Image.query.get(image_id)
     if image:
-        return send_file(io.BytesIO(image.data), mimetype='image/png')
+        # 選択された画像データを取得
+        image_file = getattr(image, image_data, None)
+        if image_file:
+            return send_file(io.BytesIO(image_file), mimetype='image/png')
     return 'Image not found', 404
 
 if __name__ == '__main__':
