@@ -3,6 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <title>Image Gallery</title>
+    <style>
+        .image-container {
+            margin-bottom: 20px;
+        }
+        .hidden {
+            display: none;
+        }
+    </style>
 </head>
 <body>
     <h1>Image Gallery</h1>
@@ -12,10 +20,24 @@
         {% for image in images %}
             <div class="image-container">
                 <h3>{{ image.name }}</h3>
-                <!-- 画像を直接表示 -->
-                <img src="{{ url_for('show_image', image_id=image.id) }}" alt="{{ image.name }}">
+                <!-- data1の画像を表示し、クリックで他の画像を表示 -->
+                <img src="{{ url_for('show_image', image_id=image.id, image_data='data1') }}" alt="{{ image.name }}" onclick="showImages('{{ image.id }}')">
+                
+                <!-- data2, data3, data4の画像を隠しておく -->
+                <div id="additional-images-{{ image.id }}" class="hidden">
+                    <img src="{{ url_for('show_image', image_id=image.id, image_data='data2') }}" alt="Image 2">
+                    <img src="{{ url_for('show_image', image_id=image.id, image_data='data3') }}" alt="Image 3">
+                    <img src="{{ url_for('show_image', image_id=image.id, image_data='data4') }}" alt="Image 4">
+                </div>
             </div>
         {% endfor %}
     </div>
+    <script>
+        function showImages(imageId) {
+            // 対応する画像を表示
+            var imagesDiv = document.getElementById('additional-images-' + imageId);
+            imagesDiv.classList.toggle('hidden');
+        }
+    </script>
 </body>
 </html>
