@@ -3,16 +3,23 @@ import requests
 import os
 import re
 from flask_sqlalchemy import SQLAlchemy
+import base64
+import requests
+import os
+import logging
+import openai
 
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///bookimages.db'
+openai.api_type = "azure"
+openai.api_version = "2023-05-15" 
+openai.api_base = "https://sunhackathon51.openai.azure.com/"  # Your Azure OpenAI resource's endpoint value.
+openai.api_key = "e6b46d28ad9445ebaa1a9e6a80fa7d76"
 
-azure_endpoint = "https://sunhackathon51.openai.azure.com/"
-api_key = "e6b46d28ad9445ebaa1a9e6a80fa7d76"
-headers = {
-    "Authorization": f"Bearer {api_key}",
-    "Content-Type": "application/json"
-}
+
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
 
 # Initialize the conversation with the system role
 messages = [
@@ -33,9 +40,13 @@ class Image(db.Model):
 with app.app_context():
     db.create_all()
 
-@app.route('/')
+@app.route('/',methods = ['GET'])
 def index():
     return render_template('index.html')
+
+@app.route('/chat')
+def chat():
+    return render_template("chat.html")
 
 @app.route('/message', methods=['POST'])
 def message():
@@ -43,27 +54,25 @@ def message():
     data = request.get_json()
     user_message = data.get('message')
     messages.append({"role": "user", "content": user_message})
+    print(messages)
 
     ai_message = ""
     try:
-        response = requests.post(
-            f"{azure_endpoint}gpt3.5-turbo/completions",
-            headers=headers,
-            json={
-                "model": "GPT35TURBO",  # モデルを選択（GPT35TURBO, GPT35TURBO16K, ADA）
-                "messages": messages
-            }
-        )
-        response_json = response.json()
-        ai_message = response_json.get('choices', [{}])[0].get('message', '')
+        response = openai.ChatCompletion.create(
+            engine="GPT35TURBO", # The deployment name you chose when you deployed the GPT-3.5-Turbo or GPT-4 model.
+            messages=messages
+            )
+        ai_message = response['choices'][0]['message']['content']
 
         # Formatting the response
-        ai_message = re.sub(r'([a-z]\))', r'<h3>\1</h3>', ai_message)
-        ai_message = ai_message.replace('\n', '<br/>')
 
         messages.append({"role": "assistant", "content": ai_message})
+        logger.info("ai_message is created")
+        logger.info(ai_message)
     except Exception as e:
         ai_message = "Error: " + str(e)
+        logger.info(ai_message)
+
 
     return jsonify({'message': ai_message})
 
@@ -74,6 +83,71 @@ def books():
 @app.route('/testupload', methods=['GET'])
 def testupload():
     return render_template("testupload.html")
+
+@app.route('/create_image',methods=['POST'])
+def create_image():
+
+    try:
+
+        data = request.get_json()
+        ai_response_text = data.get('text')
+
+        # Update the text_prompts with the AI response
+        logger.info("ai_response_text")
+        logger.info(ai_response_text )
+        url = "https://api.stability.ai/v1/generation/stable-diffusion-xl-1024-v1-0/text-to-image"
+
+        body = {
+        "steps": 40,
+        "width": 1024,
+        "height": 1024,
+        "seed": 0,
+        "cfg_scale": 5,
+        "samples": 1,
+        "text_prompts": [
+        {
+        "text": "A painting of a cat",
+        "weight": 1
+        },
+        {
+        "text": "blurry, bad",
+        "weight": -1
+        }
+        ],
+        }
+
+        headers = {
+        "Accept": "application/json",
+        "Content-Type": "application/json",
+        "Authorization": "sk-WSGCH3VWaCUlfTFVVjSijUJUJg4fVqWhuf8zUD34ylRQSwoQ",
+        }
+
+        response = requests.post(
+        url,
+        headers=headers,
+        json=body,
+        )
+        logger.info("response")
+        logger.info(response)
+
+
+        if response.status_code != 200:
+            raise Exception("Non-200 response: " + str(response.text))
+
+        data = response.json()
+
+        # make sure the out directory exists
+        if not os.path.exists("./out"):
+            os.makedirs("./out")
+
+        for i, image in enumerate(data["artifacts"]):
+            with open(f'./out/txt2img_{image["seed"]}.png', "wb") as f:
+                f.write(base64.b64decode(image["base64"]))
+
+        return jsonify({'message': 'Image created successfully'})
+    except Exception as e:
+        # エラーレスポンスを返す
+        return jsonify({'error': str(e)}), 500
 
 @app.route('/upload', methods=['POST'])
 def upload_image():
