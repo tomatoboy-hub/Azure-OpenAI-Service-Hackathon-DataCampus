@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Image Gallery</title>
+</head>
+<body>
+    <h1>Image Gallery</h1>
+
+    <!-- 画像リスト -->
+    <div id="images-list">
+        {% for image in images %}
+            <div class="image-container">
+                <h3>{{ image.name }}</h3>
+                <!-- 画像を直接表示 -->
+                <img src="{{ url_for('show_image', image_id=image.id) }}" alt="{{ image.name }}">
+            </div>
+        {% endfor %}
+    </div>
+</body>
+</html>
