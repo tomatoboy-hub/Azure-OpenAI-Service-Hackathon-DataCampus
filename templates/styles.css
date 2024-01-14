@@ -11,7 +11,7 @@ body {
     width: 500px;
     border-radius: 15px;
     font-family: 'Comic Sans MS', cursive;
-    background-image: url('cafe.jpg');
+    background-image: url('C:\Users\yodar\picture_book\Azure-OpenAI-Service-Hackathon-DataCampus\templates\book1.png');
     background-repeat: repeat-y;
     background-size: cover; 
     overflow: hidden;
@@ -20,7 +20,7 @@ body {
 }
 
 .chat-header {
-    background-color: #BC8F8F;
+    background-image: url('C:\Users\yodar\picture_book\Azure-OpenAI-Service-Hackathon-DataCampus\templates\book1.png');
     color: #fff;
     padding: 15px;
     text-align: center;
