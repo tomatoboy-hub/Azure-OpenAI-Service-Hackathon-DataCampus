@@ -11,12 +11,11 @@ body {
     width: 500px;
     border-radius: 15px;
     font-family: 'Comic Sans MS', cursive;
-    background-image: url('C:\Users\yodar\picture_book\Azure-OpenAI-Service-Hackathon-DataCampus\templates\book1.png');
+    background-image: url('templates\book1.png');
     background-repeat: repeat-y;
     background-size: cover; 
     overflow: hidden;
     box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
-    background-color: #fff;
 }
 
 .chat-header {
