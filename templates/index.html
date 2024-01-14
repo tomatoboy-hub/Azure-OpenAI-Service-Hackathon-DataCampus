@@ -243,6 +243,20 @@
                         $('#chatbox').append('<div class="message bot"><div class="bubble">' + response.message + '</div></div>');
                         const chatbox = document.getElementById("chatbox");
                         chatbox.scrollTop = chatbox.scrollHeight;
+                        fetch('/create_image', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                            },
+                            body: JSON.stringify({ text: response.message }),
+                        })
+                        .then(response => response.json())
+                        .then(data => {
+                            // ここに画像生成の応答処理を追加
+                        })
+                        .catch((error) => {
+                            console.error('Error:', error);
+                        });
                     }
                 });
             }
