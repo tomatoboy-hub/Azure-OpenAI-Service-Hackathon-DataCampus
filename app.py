@@ -115,64 +115,67 @@ def testupload():
 def create_image():
 
     try:
+        def split_text_into_four(text):
+            n = len(text) // 4
+            return [text[i:i + n] for i in range(0, len(text), n)]
+
 
         data = request.get_json()
         ai_response_text = data.get('text')
-
-        # Update the text_prompts with the AI response
-        logger.info("ai_response_text")
-        logger.info(ai_response_text )
-        url = "https://api.stability.ai/v1/generation/stable-diffusion-xl-1024-v1-0/text-to-image"
-
-        body = {
-        "steps": 40,
-        "width": 1024,
-        "height": 1024,
-        "seed": 0,
-        "cfg_scale": 5,
-        "samples": 4,
-        "text_prompts": [
-        {
-        "text": ai_response_text,
-        "weight": 1
-        }
-        ],
-        }
-
-        headers = {
-        "Accept": "application/json",
-        "Content-Type": "application/json",
-        "Authorization": "sk-WSGCH3VWaCUlfTFVVjSijUJUJg4fVqWhuf8zUD34ylRQSwoQ",
-        }
-
-        response = requests.post(
-        url,
-        headers=headers,
-        json=body,
-        )
-        logger.info("response")
-        logger.info(response)
-
-
-        if response.status_code != 200:
-            raise Exception("Non-200 response: " + str(response.text))
-
-        data = response.json()
-
-        # make sure the out directory exists
-        if not os.path.exists("./out"):
-            os.makedirs("./out")
+        ai_response_texts = split_text_into_four(ai_response_text)
 
         image_data_list = []
-        
+        url = "https://api.stability.ai/v1/generation/stable-diffusion-xl-1024-v1-0/text-to-image"
+        for text in ai_response_texts:
+            body = {
+            "steps": 40,
+            "width": 1024,
+            "height": 1024,
+            "seed": 0,
+            "cfg_scale": 5,
+            "samples": 1,
+            "text_prompts": [
+            {
+            "text": text,
+            "weight": 1
+            }
+            ],
+            }
 
-        for i, image in enumerate(data["artifacts"]):
-            image_data = base64.b64decode(image["base64"])
-            file_name = f'txt2img_{image["seed"]}.png'
-            # ファイルをサーバーに一時的に保存
-            with open(f'./out/{file_name}', "wb") as f:
-                f.write(image_data)
-            image_data_list.append(image_data)
+            headers = {
+            "Accept": "application/json",
+            "Content-Type": "application/json",
+            "Authorization": "sk-WSGCH3VWaCUlfTFVVjSijUJUJg4fVqWhuf8zUD34ylRQSwoQ",
+            }
+
+            response = requests.post(
+            url,
+            headers=headers,
+            json=body,
+            )
+            logger.info("response")
+            logger.info(response)
+
+
+            if response.status_code != 200:
+                raise Exception("Non-200 response: " + str(response.text))
+
+            data = response.json()
+
+            # make sure the out directory exists
+            if not os.path.exists("./out"):
+                os.makedirs("./out")
+
+            
+
+            for i, image in enumerate(data["artifacts"]):
+                image_data = base64.b64decode(image["base64"])
+                file_name = f'txt2img_{image["seed"]}.png'
+                # ファイルをサーバーに一時的に保存
+                with open(f'./out/{file_name}', "wb") as f:
+                    f.write(image_data)
+                image_data_list.append(image_data)
+
         if image_data_list:
             data1 = image_data_list[0] if len(image_data_list) > 0 else None
             data2 = image_data_list[1] if len(image_data_list) > 1 else None
