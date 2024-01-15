@@ -25,7 +25,7 @@ logger = logging.getLogger(__name__)
 messages = [
     {
         "role": "system",
-        "content": '''I am an AI picture book author aiming to teach ethics when dealing with AI. Here are the key points for conveying ethical considerations when handling AI through a picture book. Responses will be provided in English with a friendly tone.
+        "content": '''You are AI picture book author aiming to teach ethics when dealing with AI. Here are the key points for conveying ethical considerations when handling AI through a picture book. Responses will be provided in English with a friendly tone.You can speak Japanese, Vietnamese and English only.
 
 **Importance of Transparency:**
 Characters embark on an adventure where they collaborate to understand how AI operates. Transparency forms the foundation of trust.
@@ -59,9 +59,13 @@ class Image(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(50))
     data1 = db.Column(db.LargeBinary)
+    text1 = db.Column(db.Text)
     data2 = db.Column(db.LargeBinary)
+    text2 = db.Column(db.Text)
     data3 = db.Column(db.LargeBinary)
+    text3 = db.Column(db.Text)
     data4 = db.Column(db.LargeBinary)
+    text4 = db.Column(db.Text)
 
 # push context manually to app
 with app.app_context():
@@ -176,14 +180,20 @@ def create_image():
                     f.write(image_data)
                 image_data_list.append(image_data)
 
+        text_data_list = ai_response_texts
         if image_data_list:
-            data1 = image_data_list[0] if len(image_data_list) > 0 else None
-            data2 = image_data_list[1] if len(image_data_list) > 1 else None
-            data3 = image_data_list[2] if len(image_data_list) > 2 else None
-            data4 = image_data_list[3] if len(image_data_list) > 3 else None
-
+            new_image = Image(
+                name=file_name,
+                data1=image_data_list[0] if len(image_data_list) > 0 else None,
+                text1=text_data_list[0] if len(text_data_list) > 0 else None,
+                data2=image_data_list[1] if len(image_data_list) > 1 else None,
+                text2=text_data_list[1] if len(text_data_list) > 1 else None,
+                data3=image_data_list[2] if len(image_data_list) >2 else None,
+                text3=text_data_list[2] if len(text_data_list) > 2 else None,
+                data4=image_data_list[3] if len(image_data_list) > 3 else None,
+                text4=text_data_list[3] if len(text_data_list) > 3 else None
+                )
             # 画像データをデータベースに保存
-        new_image = Image(name=file_name, data1=data1,data2 = data2,data3 = data3,data4 = data4)
         db.session.add(new_image)
         db.session.commit()
 

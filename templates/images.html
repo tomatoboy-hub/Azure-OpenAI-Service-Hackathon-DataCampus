@@ -4,6 +4,35 @@
     <meta charset="UTF-8">
     <title>Image Gallery</title>
     <style>
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: #BBCC99;
+            background-repeat: repeat-y;
+            background-size: cover; 
+            margin: 0;
+        }
+
+        .image-container {
+            margin-bottom: 20px;
+            text-align: center;
+            color: #fbf4f4;
+            text-shadow: 2px 5px 4px rgba(0, 0, 0, 0.9);
+        }
+
+        .image-container h3 {
+            font-family: 'Pacifico', cursive;
+            font-size: 1.5em;
+            margin-bottom: 15px;
+        }
+
+        .image-container img {
+            border: 3px solid #779933;
+            border-radius: 10px;
+            margin-bottom: 10px;
+            cursor: pointer;
+            transition: transform 0.3s ease;
+        }
+
         .image-container {
             margin-bottom: 20px;
         }
@@ -22,12 +51,15 @@
                 <h3>{{ image.name }}</h3>
                 <!-- data1の画像を表示し、クリックで他の画像を表示 -->
                 <img src="{{ url_for('show_image', image_id=image.id, image_data='data1') }}" alt="{{ image.name }}" onclick="showImages('{{ image.id }}')">
-                
+                <p>{{ image.text1 }}</p>
                 <!-- data2, data3, data4の画像を隠しておく -->
                 <div id="additional-images-{{ image.id }}" class="hidden">
                     <img src="{{ url_for('show_image', image_id=image.id, image_data='data2') }}" alt="Image 2">
+                    <p>{{ image.text2 }}</p>
                     <img src="{{ url_for('show_image', image_id=image.id, image_data='data3') }}" alt="Image 3">
+                    <p>{{ image.text3 }}</p>
                     <img src="{{ url_for('show_image', image_id=image.id, image_data='data4') }}" alt="Image 4">
+                    <p>{{ image.text4 }}</p>
                 </div>
             </div>
         {% endfor %}

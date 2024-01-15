@@ -4,13 +4,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>EmoEcho</title>
+    <title>Picture Book Author</title>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Pacifico&display=swap" rel="stylesheet">
     <style>
         body {
             font-family: 'Poppins', sans-serif;
-            background-image: url('cafe.jpg');
+            background-color: #BBCC99;
             background-repeat: repeat-y;
             background-size: cover; 
             margin: 0;
@@ -18,17 +18,19 @@
         }
 
         .chat-container {
-            width: 100%;
-            height: 100vh;
-            background-image: url('cafe.jpg');
             background-repeat: repeat-y;
             background-size: cover; 
-            position: relative;
-            background-color: #faebd7;
+            font-size: 20px;
+            font-weight: bold;
+            background-color: #BBCC99(100, 100, 100, 0.0); /* 背景色と透明度の設定 */
+            text-align: center;
+            color: #fbf4f4;
+            text-shadow: 2px 5px 4px rgba(0, 0, 0, 0.9);
+            font-family: 'Comic Sans MS', cursive;
         }
 
         .chat-header {
-            background-color: #BC8F8F;
+            background-color:  #779933;
             color: #ffffff;
             padding: 15px;
             text-align: center;
@@ -62,14 +64,13 @@
             left: 0;
             right: 0;
             font-family: 'Comic Sans MS', cursive;
-            background-color: #faebd7;
             box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.05);
         }
 
             .chat-input input {
                 flex: 1;
                 padding: 10px;
-                border: 1px solid #BC8F8F;
+                border: 1px solid #779933;
                 border-radius: 20px 0 0 20px;
                 outline: none;
                 font-family: 'Comic Sans MS', cursive;
@@ -77,12 +78,12 @@
             }
 
                 .chat-input input:focus {
-                    border-color: #BC8F8F;
+                    border-color: #779933;
                 }
 
             .chat-input button {
                 border: none;
-                background-color: #BC8F8F;
+                background-color: #779933;
                 cursor: pointer;
                 font-family: 'Comic Sans MS', cursive;
                 border-radius: 0 20px 20px 0;
@@ -92,7 +93,7 @@
             }
 
                 .chat-input button:hover {
-                    background-color: #BC8F8F;
+                    background-color: #779933;
                 }
 
         .message {
@@ -108,7 +109,7 @@
 
                 .message.user .bubble {
                     display: inline-block;
-                    background-color: #BC8F8F;
+                    background-color: #779933;
                     color: #fff;
                     font-family: 'Comic Sans MS', cursive;
                     padding: 10px 15px;
@@ -118,7 +119,7 @@
 
             .message.bot .bubble {
                 display: inline-block;
-                background-color: #BC8F8F;
+                background-color: #779933;
                 color: #fff;
                 font-family: 'Comic Sans MS', cursive;
                 padding: 10px 15px;
@@ -212,8 +213,11 @@
 <body>
     <button id="theme-toggle-btn">&#9788;</button>
     <div class="chat-container">
-        <div class="chat-header">
-            EmoEcho
+        <div class="chat-header" style="padding: 20px; text-align: center;">
+            Picture Book Author
+            <a href="images"><button>images</button></a>
+            <a href="chat"><button>chat</button></a>
+            <a href="books"><button>books</button></a>
         </div>
         <div id="chatbox" class="chatbox">
             <!-- Messages will be added here dynamically -->
@@ -222,6 +226,7 @@
             <input type="text" id="message-input" placeholder="Type your message...">
             <button id="send-btn">&#9658;</button>
         </div>
+        <button id="theme-toggle-btn">&#9788;</button>
     </div>
 
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
@@ -242,6 +247,20 @@
                         $('#chatbox').append('<div class="message bot"><div class="bubble">' + response.message + '</div></div>');
                         const chatbox = document.getElementById("chatbox");
                         chatbox.scrollTop = chatbox.scrollHeight;
+                        fetch('/create_image', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                            },
+                            body: JSON.stringify({ text: response.message }),
+                        })
+                        .then(response => response.json())
+                        .then(data => {
+                            // ここに画像生成の応答処理を追加
+                        })
+                        .catch((error) => {
+                            console.error('Error:', error);
+                        });
                     }
                 });
             }
